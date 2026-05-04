@@ -9,33 +9,52 @@
 </head>
 <body>
   <div class="app">
-    <!-- Header -->
+
+    <!-- Header Block mit Logo -->
     <header class="header">
-      <div class="header-inner">
+      <div class="logo-block">
         <img src="logo.png" alt="HypoKompass" class="logo" onerror="this.style.display='none'; document.querySelector('.logo-text').style.display='block'">
         <span class="logo-text" style="display:none">HypoKompass</span>
       </div>
+      <div class="hero">
+        <h1>Kostenlose Beratung buchen</h1>
+        <p>Baufinanzierung auf Augenhöhe – buchen Sie sich jetzt Ihren persönlichen oder digitalen Beratungstermin.</p>
+      </div>
     </header>
-
-    <!-- Hero -->
-    <div class="hero">
-      <h1>Kostenlose Beratung buchen</h1>
-      <p>Baufinanzierung einfach erklärt – buchen Sie jetzt Ihren persönlichen Beratungstermin</p>
-    </div>
 
     <!-- Stepper -->
     <div class="stepper" id="stepper">
-      <div class="step active" data-step="1"><span class="step-num">1</span><span class="step-label">Datum</span></div>
+      <div class="step active" data-step="1"><span class="step-num">1</span><span class="step-label">Art</span></div>
       <div class="step-line"></div>
-      <div class="step" data-step="2"><span class="step-num">2</span><span class="step-label">Uhrzeit</span></div>
+      <div class="step" data-step="2"><span class="step-num">2</span><span class="step-label">Datum</span></div>
       <div class="step-line"></div>
-      <div class="step" data-step="3"><span class="step-num">3</span><span class="step-label">Daten</span></div>
+      <div class="step" data-step="3"><span class="step-num">3</span><span class="step-label">Uhrzeit</span></div>
       <div class="step-line"></div>
-      <div class="step" data-step="4"><span class="step-num">4</span><span class="step-label">Bestätigt</span></div>
+      <div class="step" data-step="4"><span class="step-num">4</span><span class="step-label">Daten</span></div>
+      <div class="step-line"></div>
+      <div class="step" data-step="5"><span class="step-num">5</span><span class="step-label">Bestätigt</span></div>
     </div>
 
-    <!-- Step 1: Kalender -->
+    <!-- Step 1: Art der Beratung -->
     <div class="card" id="step-1">
+      <h2>Art der Beratung wählen</h2>
+      <div class="type-grid">
+        <button class="type-card" onclick="selectType('digital', this)">
+          <div class="type-icon">💻</div>
+          <div class="type-title">Digital</div>
+          <div class="type-desc">Online-Beratung per Video – bequem von zuhause</div>
+        </button>
+        <button class="type-card" onclick="selectType('vor-ort', this)">
+          <div class="type-icon">🤝</div>
+          <div class="type-title">Vor Ort</div>
+          <div class="type-desc">Persönliches Gespräch in unserem Büro</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2: Kalender -->
+    <div class="card hidden" id="step-2">
+      <button class="back-btn" onclick="goToStep(1)">← Zurück</button>
       <h2>Datum wählen</h2>
       <div class="calendar-nav">
         <button class="nav-btn" id="prev-month">‹</button>
@@ -49,18 +68,18 @@
       </div>
     </div>
 
-    <!-- Step 2: Zeitslots -->
-    <div class="card hidden" id="step-2">
-      <button class="back-btn" onclick="goToStep(1)">← Zurück</button>
+    <!-- Step 3: Zeitslots -->
+    <div class="card hidden" id="step-3">
+      <button class="back-btn" onclick="goToStep(2)">← Zurück</button>
       <h2>Uhrzeit wählen</h2>
       <p class="selected-date-label" id="selected-date-label"></p>
       <div class="slots-grid" id="slots"></div>
       <div class="loader hidden" id="slots-loader">Lade Termine…</div>
     </div>
 
-    <!-- Step 3: Kundendaten -->
-    <div class="card hidden" id="step-3">
-      <button class="back-btn" onclick="goToStep(2)">← Zurück</button>
+    <!-- Step 4: Kundendaten -->
+    <div class="card hidden" id="step-4">
+      <button class="back-btn" onclick="goToStep(3)">← Zurück</button>
       <h2>Ihre Daten</h2>
       <div class="booking-summary" id="booking-summary"></div>
       <form id="booking-form">
@@ -88,8 +107,8 @@
       </form>
     </div>
 
-    <!-- Step 4: Bestätigung -->
-    <div class="card hidden" id="step-4">
+    <!-- Step 5: Bestätigung -->
+    <div class="card hidden" id="step-5">
       <div class="success-icon">✓</div>
       <h2>Termin bestätigt!</h2>
       <p class="success-text" id="success-text"></p>

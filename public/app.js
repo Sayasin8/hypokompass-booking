@@ -1,6 +1,7 @@
 // HypoKompass Buchungssystem – Frontend
 const API = '';
 let currentStep = 1;
+let selectedType = null;
 let selectedDate = null;
 let selectedSlot = null;
 let currentMonth = new Date();
@@ -41,6 +42,14 @@ function goToStep(step) {
   });
   currentStep = step;
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── Typ-Auswahl ─────────────────────────────────────────────
+function selectType(type, btn) {
+  selectedType = type;
+  document.querySelectorAll('.type-card').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  setTimeout(() => goToStep(2), 280);
 }
 
 // ── Calendar ────────────────────────────────────────────────
@@ -102,7 +111,7 @@ function selectDate(iso) {
   selectedDate = iso;
   renderCalendar();
   loadSlots(iso);
-  goToStep(2);
+  goToStep(3);
 }
 
 document.getElementById('prev-month').addEventListener('click', () => {
@@ -150,15 +159,16 @@ function selectSlot(start, end, btn) {
   document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
   selectedSlot = { start, end };
-  setTimeout(() => showStep3(), 300);
+  setTimeout(() => showStep4(), 300);
 }
 
-// ── Step 3 ──────────────────────────────────────────────────
-function showStep3() {
+// ── Step 4 ──────────────────────────────────────────────────
+function showStep4() {
   if (!selectedSlot) return;
+  const typeLabel = selectedType === 'digital' ? '💻 Digital' : '🤝 Vor Ort';
   document.getElementById('booking-summary').innerHTML =
-    `📅 <strong>${formatDate(selectedSlot.start)}</strong><br>🕐 ${formatTime(selectedSlot.start)} – ${formatTime(selectedSlot.end)} Uhr`;
-  goToStep(3);
+    `${typeLabel}<br>📅 <strong>${formatDate(selectedSlot.start)}</strong><br>🕐 ${formatTime(selectedSlot.start)} – ${formatTime(selectedSlot.end)} Uhr`;
+  goToStep(4);
 }
 
 // ── Form Submit ─────────────────────────────────────────────
@@ -179,6 +189,7 @@ document.getElementById('booking-form').addEventListener('submit', async (e) => 
         email: document.getElementById('email').value.trim(),
         phone: document.getElementById('phone').value.trim() || null,
         start_time: selectedSlot.start,
+        consultation_type: selectedType,
         source,
       }),
     });
@@ -187,12 +198,13 @@ document.getElementById('booking-form').addEventListener('submit', async (e) => 
 
     sessionStorage.setItem('cancelToken', data.cancelToken);
 
+    const typeLabel = selectedType === 'digital' ? '💻 Digital' : '🤝 Vor Ort';
     document.getElementById('success-text').textContent =
       `Ihr Termin am ${formatDate(selectedSlot.start)} um ${formatTime(selectedSlot.start)} Uhr ist bestätigt.`;
     document.getElementById('confirmation-box').innerHTML =
-      `📅 ${formatDate(selectedSlot.start)}<br>🕐 ${formatTime(selectedSlot.start)} Uhr`;
+      `${typeLabel}<br>📅 ${formatDate(selectedSlot.start)}<br>🕐 ${formatTime(selectedSlot.start)} Uhr`;
 
-    goToStep(4);
+    goToStep(5);
   } catch (err) {
     toast(err.message, 'error');
     btn.disabled = false;
@@ -216,4 +228,5 @@ function shareBooking() {
   if (source) fetch(`/track?source=${encodeURIComponent(source)}`).catch(() => {});
   loadAvailableDays();
   goToStep(1);
+  // Stepper hat jetzt 5 Schritte — done-Logik passt automatisch
 })();
