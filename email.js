@@ -7,12 +7,19 @@ const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: parseInt(process.env.SMTP_PORT || '587'),
   secure: process.env.SMTP_SECURE === 'true',
+  requireTLS: true,
   connectionTimeout: 15000,
   greetingTimeout: 10000,
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
+});
+
+transporter.verify().then(() => {
+  console.log('✅ SMTP Verbindung erfolgreich');
+}).catch(err => {
+  console.error('❌ SMTP Verbindung fehlgeschlagen:', err.message);
 });
 
 function formatDateTime(isoString) {
