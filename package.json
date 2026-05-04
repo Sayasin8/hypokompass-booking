@@ -1,0 +1,25 @@
+{
+  "name": "hypokompass-booking",
+  "version": "1.0.0",
+  "description": "Terminbuchungssystem für HypoKompass – Yasin Uca",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "better-sqlite3": "^11.10.0",
+    "nodemailer": "^6.9.8",
+    "tsdav": "^2.0.8",
+    "ical.js": "^1.5.0",
+    "uuid": "^9.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.1",
+    "bcryptjs": "^2.4.3",
+    "express-rate-limit": "^7.1.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  }
+}

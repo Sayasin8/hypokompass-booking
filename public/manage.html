@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Termin verwalten – HypoKompass</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-inner">
+        <img src="logo.png" alt="HypoKompass" class="logo" onerror="this.style.display='none'">
+        <span class="logo-text" style="display:none">HypoKompass</span>
+      </div>
+    </header>
+
+    <div class="hero">
+      <h1>Termin verwalten</h1>
+      <p>Stornieren oder verschieben Sie Ihren Beratungstermin</p>
+    </div>
+
+    <div class="card" id="loading-card">
+      <div class="loader">Lade Termindetails…</div>
+    </div>
+
+    <div class="card hidden" id="booking-card">
+      <div class="manage-card">
+        <div class="icon">📅</div>
+        <h2 id="booking-title">Ihr Termin</h2>
+        <div class="manage-detail" id="booking-details"></div>
+
+        <div id="reschedule-warning" class="warning-box hidden"></div>
+
+        <div id="actions">
+          <button class="btn-outline" id="reschedule-btn" onclick="startReschedule()">Termin verschieben</button>
+          <button class="btn-danger" id="cancel-btn" onclick="confirmCancel()">Termin stornieren</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reschedule picker -->
+    <div class="card hidden" id="reschedule-card">
+      <button class="back-btn" onclick="backToBooking()">← Zurück</button>
+      <h2>Neues Datum wählen</h2>
+      <div class="calendar-nav">
+        <button class="nav-btn" id="prev-month-r">‹</button>
+        <span id="month-label-r"></span>
+        <button class="nav-btn" id="next-month-r">›</button>
+      </div>
+      <div class="calendar-grid" id="calendar-r"></div>
+      <div class="calendar-legend">
+        <span class="legend-item"><span class="dot green"></span> Verfügbar</span>
+        <span class="legend-item"><span class="dot gray"></span> Belegt</span>
+      </div>
+    </div>
+
+    <div class="card hidden" id="slots-card">
+      <button class="back-btn" onclick="document.getElementById('slots-card').classList.add('hidden'); document.getElementById('reschedule-card').classList.remove('hidden')">← Zurück</button>
+      <h2>Neue Uhrzeit wählen</h2>
+      <p class="selected-date-label" id="selected-date-r"></p>
+      <div class="slots-grid" id="slots-r"></div>
+    </div>
+
+    <div class="card hidden" id="done-card">
+      <div class="manage-card">
+        <div class="success-icon" id="done-icon">✓</div>
+        <h2 id="done-title">Fertig!</h2>
+        <p class="success-text" id="done-text"></p>
+        <a href="/" class="btn-primary" style="display:block;text-align:center;text-decoration:none;margin-top:16px">Zurück zur Startseite</a>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <a href="https://www.hypokompass.de">www.hypokompass.de</a>
+    </footer>
+  </div>
+
+  <script src="style.css" type="text/css"></script>
+  <script>
+    const API = '';
+    let booking = null;
+    let token = null;
+    let rMonth = new Date();
+    let rAvailDays = [];
+    let rSelectedDate = null;
+
+    function formatDate(iso) {
+      return new Date(iso).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    }
+    function formatTime(iso) {
+      return new Date(iso).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    }
+    function toast(msg, type = '') {
+      let t = document.querySelector('.toast');
+      if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); }
+      t.textContent = msg; t.className = `toast show ${type}`;
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    async function init() {
+      token = new URLSearchParams(window.location.search).get('token');
+      if (!token) { showError('Kein Buchungstoken gefunden.'); return; }
+      try {
+        const r = await fetch(`${API}/api/booking/${token}`);
+        booking = await r.json();
+        if (!r.ok) throw new Error(booking.error);
+        showBooking();
+      } catch (e) { showError(e.message); }
+    }
+
+    function showBooking() {
+      document.getElementById('loading-card').classList.add('hidden');
+      document.getElementById('booking-card').classList.remove('hidden');
+      const remaining = 3 - booking.reschedule_count;
+      document.getElementById('booking-details').innerHTML = `
+        <div class="row"><span class="label">Datum</span><span class="value">${formatDate(booking.start_time)}</span></div>
+        <div class="row"><span class="label">Uhrzeit</span><span class="value">${formatTime(booking.start_time)} Uhr</span></div>
+        <div class="row"><span class="label">Status</span><span class="value"><span class="badge ${booking.status}">${booking.status === 'confirmed' ? 'Bestätigt' : 'Storniert'}</span></span></div>
+        <div class="row"><span class="label">Umbuchungen</span><span class="value">${booking.reschedule_count} / 3 genutzt</span></div>
+      `;
+      if (booking.status !== 'confirmed') {
+        document.getElementById('actions').innerHTML = '<p style="color:var(--text-muted);text-align:center">Dieser Termin ist nicht mehr aktiv.</p>';
+        return;
+      }
+      if (!booking.can_reschedule) {
+        document.getElementById('reschedule-warning').textContent = 'Sie haben die maximale Anzahl an Umbuchungen (3x) erreicht.';
+        document.getElementById('reschedule-warning').classList.remove('hidden');
+        document.getElementById('reschedule-btn').disabled = true;
+        document.getElementById('reschedule-btn').style.opacity = '0.4';
+      }
+    }
+
+    function showError(msg) {
+      document.getElementById('loading-card').innerHTML = `<p style="color:var(--red);text-align:center">${msg}</p>`;
+    }
+
+    async function confirmCancel() {
+      if (!confirm('Möchten Sie Ihren Termin wirklich stornieren?')) return;
+      const btn = document.getElementById('cancel-btn');
+      btn.disabled = true; btn.textContent = 'Wird storniert…';
+      try {
+        const r = await fetch(`${API}/api/cancel/${token}`, { method: 'POST' });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error);
+        document.getElementById('booking-card').classList.add('hidden');
+        document.getElementById('done-icon').textContent = '✗';
+        document.getElementById('done-icon').style.background = 'var(--red)';
+        document.getElementById('done-title').textContent = 'Termin storniert';
+        document.getElementById('done-text').textContent = 'Ihr Termin wurde storniert. Sie erhalten eine Bestätigungs-E-Mail.';
+        document.getElementById('done-card').classList.remove('hidden');
+      } catch (e) { toast(e.message, 'error'); btn.disabled = false; btn.textContent = 'Termin stornieren'; }
+    }
+
+    function startReschedule() {
+      document.getElementById('booking-card').classList.add('hidden');
+      document.getElementById('reschedule-card').classList.remove('hidden');
+      loadRDays();
+    }
+    function backToBooking() {
+      document.getElementById('reschedule-card').classList.add('hidden');
+      document.getElementById('booking-card').classList.remove('hidden');
+    }
+
+    async function loadRDays() {
+      const month = `${rMonth.getFullYear()}-${String(rMonth.getMonth() + 1).padStart(2, '0')}`;
+      const r = await fetch(`${API}/api/available-days?month=${month}`);
+      const d = await r.json();
+      rAvailDays = d.availableDays || [];
+      renderRCalendar();
+    }
+    function renderRCalendar() {
+      const grid = document.getElementById('calendar-r');
+      document.getElementById('month-label-r').textContent = rMonth.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+      const weekdays = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+      let html = weekdays.map(d => `<div class="cal-weekday">${d}</div>`).join('');
+      const first = new Date(rMonth.getFullYear(), rMonth.getMonth(), 1);
+      const last = new Date(rMonth.getFullYear(), rMonth.getMonth() + 1, 0);
+      let sw = first.getDay() === 0 ? 6 : first.getDay() - 1;
+      for (let i = 0; i < sw; i++) html += `<div class="cal-day empty"></div>`;
+      for (let d = 1; d <= last.getDate(); d++) {
+        const iso = `${rMonth.getFullYear()}-${String(rMonth.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const avail = rAvailDays.includes(iso);
+        const sel = rSelectedDate === iso;
+        html += `<div class="cal-day ${avail?'available':'unavailable'}${sel?' selected':''}" ${avail?`onclick="selectRDate('${iso}')"`:''}>${d}</div>`;
+      }
+      grid.innerHTML = html;
+      document.getElementById('prev-month-r').disabled = rMonth <= new Date(new Date().setDate(1));
+    }
+    document.getElementById('prev-month-r').addEventListener('click', () => { rMonth.setMonth(rMonth.getMonth()-1); loadRDays(); });
+    document.getElementById('next-month-r').addEventListener('click', () => { rMonth.setMonth(rMonth.getMonth()+1); loadRDays(); });
+
+    async function selectRDate(iso) {
+      rSelectedDate = iso;
+      renderRCalendar();
+      document.getElementById('reschedule-card').classList.add('hidden');
+      document.getElementById('slots-card').classList.remove('hidden');
+      document.getElementById('selected-date-r').textContent = formatDate(iso);
+      const container = document.getElementById('slots-r');
+      container.innerHTML = '<div class="loader">Lade Uhrzeiten…</div>';
+      const r = await fetch(`${API}/api/slots?date=${iso}`);
+      const d = await r.json();
+      container.innerHTML = (d.slots || []).map(s => {
+        const t = formatTime(s.start);
+        if (s.available) return `<button class="slot-btn available" onclick="reschedule('${s.start}')">${t}</button>`;
+        return `<button class="slot-btn busy" disabled>${t}</button>`;
+      }).join('');
+    }
+
+    async function reschedule(newStart) {
+      if (!confirm(`Termin wirklich auf ${formatDate(newStart)} um ${formatTime(newStart)} Uhr verschieben?`)) return;
+      try {
+        const r = await fetch(`${API}/api/reschedule/${token}`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ new_start_time: newStart }),
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error);
+        document.getElementById('slots-card').classList.add('hidden');
+        document.getElementById('done-text').textContent = `Ihr Termin wurde auf ${formatDate(newStart)} um ${formatTime(newStart)} Uhr verschoben. Sie erhalten eine Bestätigungs-E-Mail. (Verbleibende Umbuchungen: ${d.remaining})`;
+        document.getElementById('done-card').classList.remove('hidden');
+      } catch (e) { toast(e.message, 'error'); }
+    }
+
+    init();
+  </script>
+</body>
+</html>

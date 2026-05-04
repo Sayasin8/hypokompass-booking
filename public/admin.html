@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard – HypoKompass</title>
+  <style>
+    :root {
+      --primary: #1a3a6b; --primary-light: #2a5298; --accent: #e8b84b;
+      --green: #22c55e; --red: #ef4444; --bg: #f4f6fb;
+      --card: #fff; --border: #e5e7eb; --text: #1a1a2e; --muted: #6b7280;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
+
+    /* Login */
+    #login-screen {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .login-box { background: var(--card); border-radius: 16px; padding: 40px 32px; width: 100%; max-width: 380px; box-shadow: 0 4px 24px rgba(26,58,107,0.12); text-align: center; }
+    .login-box h1 { color: var(--primary); margin-bottom: 8px; font-size: 22px; }
+    .login-box p { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+    .login-box input { width: 100%; padding: 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 16px; margin-bottom: 14px; outline: none; }
+    .login-box input:focus { border-color: var(--primary); }
+    .login-box button { width: 100%; padding: 14px; background: var(--primary); color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; }
+    .login-box button:hover { background: var(--primary-light); }
+    .login-error { color: var(--red); font-size: 13px; margin-top: 10px; }
+
+    /* Dashboard */
+    #dashboard { display: none; }
+    .top-bar {
+      background: var(--primary); color: #fff; padding: 14px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .top-bar h1 { font-size: 18px; }
+    .top-bar button { background: rgba(255,255,255,0.15); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+    .top-bar button:hover { background: rgba(255,255,255,0.25); }
+
+    .content { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
+
+    /* Stats */
+    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
+    @media (min-width: 768px) { .stats-grid { grid-template-columns: repeat(5, 1fr); } }
+    .stat-card { background: var(--card); border-radius: 12px; padding: 16px; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+    .stat-card .label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    .stat-card .value { font-size: 28px; font-weight: 700; color: var(--primary); }
+    .stat-card .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* Section */
+    .section { background: var(--card); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+    .section h2 { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--primary); }
+
+    /* Source chart */
+    .source-bars { display: flex; flex-direction: column; gap: 10px; }
+    .source-row { display: flex; align-items: center; gap: 10px; }
+    .source-name { width: 80px; font-size: 13px; color: var(--muted); text-align: right; flex-shrink: 0; }
+    .bar-track { flex: 1; background: var(--bg); border-radius: 6px; height: 24px; overflow: hidden; }
+    .bar-fill { height: 100%; background: var(--primary); border-radius: 6px; transition: width 0.6s ease; display: flex; align-items: center; padding-left: 8px; }
+    .bar-label { font-size: 12px; color: #fff; font-weight: 600; }
+
+    /* Chart */
+    .chart-container { overflow-x: auto; }
+    .chart-svg { display: block; }
+
+    /* Table */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 12px; text-transform: uppercase; white-space: nowrap; }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafbff; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .badge.confirmed { background: #dcfce7; color: #166534; }
+    .badge.cancelled { background: #fee2e2; color: #991b1b; }
+    .source-badge { background: var(--bg); color: var(--muted); padding: 2px 8px; border-radius: 12px; font-size: 11px; }
+    .source-badge.instagram { background: #fce7f3; color: #9d174d; }
+    .source-badge.whatsapp { background: #dcfce7; color: #166534; }
+    .source-badge.google { background: #fef3c7; color: #92400e; }
+    .del-btn { background: none; border: 1px solid var(--border); color: var(--red); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    .del-btn:hover { background: var(--red); color: #fff; border-color: var(--red); }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+    .tab { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--muted); cursor: pointer; font-size: 13px; font-weight: 500; }
+    .tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    /* Share links */
+    .links-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    @media (min-width: 640px) { .links-grid { grid-template-columns: repeat(4, 1fr); } }
+    .link-card { border: 1.5px solid var(--border); border-radius: 10px; padding: 14px; text-align: center; cursor: pointer; transition: all 0.15s; }
+    .link-card:hover { border-color: var(--primary); background: #f0f4ff; }
+    .link-card .icon { font-size: 24px; margin-bottom: 6px; }
+    .link-card .name { font-size: 13px; font-weight: 600; color: var(--primary); }
+    .link-card .url { font-size: 11px; color: var(--muted); margin-top: 4px; word-break: break-all; }
+    .copy-hint { font-size: 11px; color: var(--green); margin-top: 4px; display: none; }
+
+    .refresh-btn { float: right; background: none; border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+    .refresh-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+    .empty { text-align: center; color: var(--muted); padding: 30px; font-size: 14px; }
+
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1a1a2e; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; z-index: 9999; opacity: 0; transition: opacity 0.3s; }
+    .toast.show { opacity: 1; }
+    .toast.success { background: var(--green); }
+  </style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="login-screen">
+  <div class="login-box">
+    <div style="font-size:40px;margin-bottom:12px">🏦</div>
+    <h1>HypoKompass Admin</h1>
+    <p>Bitte melden Sie sich an</p>
+    <input type="password" id="pw-input" placeholder="Passwort" onkeydown="if(event.key==='Enter')login()">
+    <button onclick="login()">Anmelden</button>
+    <div class="login-error hidden" id="login-error">Falsches Passwort</div>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard">
+  <div class="top-bar">
+    <h1>📊 HypoKompass Dashboard</h1>
+    <button onclick="logout()">Abmelden</button>
+  </div>
+  <div class="content">
+
+    <!-- Stats -->
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card"><div class="label">Gesamt Buchungen</div><div class="value" id="s-total">–</div></div>
+      <div class="stat-card"><div class="label">Aktive Termine</div><div class="value" id="s-confirmed" style="color:var(--green)">–</div></div>
+      <div class="stat-card"><div class="label">Stornierungen</div><div class="value" id="s-cancelled" style="color:var(--red)">–</div></div>
+      <div class="stat-card"><div class="label">Heute</div><div class="value" id="s-today" style="color:var(--accent)">–</div></div>
+      <div class="stat-card"><div class="label">Diese Woche</div><div class="value" id="s-week">–</div></div>
+    </div>
+
+    <!-- Share Links -->
+    <div class="section">
+      <h2>🔗 Buchungslinks</h2>
+      <div class="links-grid" id="links-grid"></div>
+    </div>
+
+    <!-- Traffic chart + Source -->
+    <div style="display:grid;grid-template-columns:1fr;gap:16px">
+      <div class="section">
+        <h2>📈 Buchungen (letzte 30 Tage) <button class="refresh-btn" onclick="loadDashboard()">↻ Aktualisieren</button></h2>
+        <div class="chart-container" id="chart-container"></div>
+      </div>
+      <div class="section">
+        <h2>📍 Buchungsquellen</h2>
+        <div class="source-bars" id="source-bars"></div>
+      </div>
+    </div>
+
+    <!-- Upcoming -->
+    <div class="section">
+      <h2>🗓 Nächste Termine</h2>
+      <div class="table-wrap">
+        <table id="upcoming-table">
+          <thead><tr><th>Datum & Zeit</th><th>Name</th><th>Telefon</th><th>E-Mail</th><th>Quelle</th><th></th></tr></thead>
+          <tbody id="upcoming-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- All bookings -->
+    <div class="section">
+      <h2>📋 Alle Buchungen</h2>
+      <div class="tabs">
+        <button class="tab active" onclick="filterBookings('all', this)">Alle</button>
+        <button class="tab" onclick="filterBookings('confirmed', this)">Bestätigt</button>
+        <button class="tab" onclick="filterBookings('cancelled', this)">Storniert</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Datum</th><th>Name</th><th>E-Mail</th><th>Status</th><th>Quelle</th><th>Gebucht am</th></tr></thead>
+          <tbody id="all-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+let adminToken = sessionStorage.getItem('adminToken') || '';
+let allBookings = [];
+
+function toast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast show ${type}`;
+  setTimeout(() => t.className = 'toast', 2500);
+}
+
+async function login() {
+  const pw = document.getElementById('pw-input').value;
+  try {
+    const r = await fetch(`${API}/api/admin/login`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ password: pw })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    adminToken = d.token;
+    sessionStorage.setItem('adminToken', adminToken);
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    loadDashboard();
+  } catch {
+    document.getElementById('login-error').classList.remove('hidden');
+  }
+}
+
+function logout() {
+  sessionStorage.removeItem('adminToken');
+  location.reload();
+}
+
+async function loadDashboard() {
+  try {
+    const r = await fetch(`${API}/api/admin/dashboard`, {
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+    if (r.status === 401) { logout(); return; }
+    const d = await r.json();
+    renderStats(d.stats);
+    renderSources(d.bySource);
+    renderChart(d.byDay);
+    renderUpcoming(d.upcoming);
+    allBookings = d.recent;
+    renderAllBookings(allBookings);
+    renderLinks();
+  } catch (e) { toast('Fehler beim Laden', 'error'); }
+}
+
+function renderStats(s) {
+  document.getElementById('s-total').textContent = s.total;
+  document.getElementById('s-confirmed').textContent = s.confirmed;
+  document.getElementById('s-cancelled').textContent = s.cancelled;
+  document.getElementById('s-today').textContent = s.today;
+  document.getElementById('s-week').textContent = s.thisWeek;
+}
+
+function renderSources(sources) {
+  const max = Math.max(...sources.map(s => s.count), 1);
+  const icons = { website: '🌐', instagram: '📸', whatsapp: '💬', google: '🔍', link: '🔗' };
+  document.getElementById('source-bars').innerHTML = sources.length === 0
+    ? '<div class="empty">Noch keine Daten</div>'
+    : sources.map(s => `
+      <div class="source-row">
+        <div class="source-name">${icons[s.source]||'📌'} ${s.source}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(s.count/max*100)}%"><span class="bar-label">${s.count}</span></div></div>
+      </div>`).join('');
+}
+
+function renderChart(days) {
+  if (!days.length) { document.getElementById('chart-container').innerHTML = '<div class="empty">Keine Daten</div>'; return; }
+  const W = 600, H = 140, PAD = 30;
+  const max = Math.max(...days.map(d => d.count), 1);
+  const xs = days.map((_, i) => PAD + i * ((W - PAD * 2) / (days.length - 1 || 1)));
+  const ys = days.map(d => H - PAD - ((H - PAD * 2) * d.count / max));
+  const path = xs.map((x, i) => `${i === 0 ? 'M' : 'L'}${x},${ys[i]}`).join(' ');
+  const area = `M${xs[0]},${H - PAD} ` + xs.map((x, i) => `L${x},${ys[i]}`).join(' ') + ` L${xs[xs.length-1]},${H-PAD} Z`;
+  const dots = xs.map((x, i) => `<circle cx="${x}" cy="${ys[i]}" r="4" fill="#1a3a6b"><title>${days[i].day}: ${days[i].count}</title></circle>`).join('');
+  const labels = days.filter((_, i) => i % Math.ceil(days.length / 6) === 0)
+    .map((d, _, arr) => { const i = days.indexOf(d); return `<text x="${xs[i]}" y="${H-8}" text-anchor="middle" font-size="10" fill="#9ca3af">${d.day.slice(5)}</text>`; }).join('');
+  document.getElementById('chart-container').innerHTML = `
+    <svg class="chart-svg" viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px">
+      <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1a3a6b" stop-opacity="0.2"/><stop offset="100%" stop-color="#1a3a6b" stop-opacity="0"/></linearGradient></defs>
+      <path d="${area}" fill="url(#g)"/>
+      <path d="${path}" stroke="#1a3a6b" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
+      ${dots}${labels}
+    </svg>`;
+}
+
+function fmtDT(iso) {
+  const d = new Date(iso);
+  return `${d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})} ${d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}`;
+}
+function fmtD(iso) {
+  return new Date(iso).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'});
+}
+
+function sourceBadge(s) {
+  const c = ['instagram','whatsapp','google'].includes(s) ? s : '';
+  return `<span class="source-badge ${c}">${s||'website'}</span>`;
+}
+
+function renderUpcoming(list) {
+  const tbody = document.getElementById('upcoming-body');
+  if (!list.length) { tbody.innerHTML = `<tr><td colspan="6" class="empty">Keine bevorstehenden Termine</td></tr>`; return; }
+  tbody.innerHTML = list.map(b => `
+    <tr>
+      <td><strong>${fmtDT(b.start_time)}</strong></td>
+      <td>${b.customer_name}</td>
+      <td>${b.customer_phone||'–'}</td>
+      <td>${b.customer_email}</td>
+      <td>${sourceBadge(b.source)}</td>
+      <td><button class="del-btn" onclick="cancelBooking('${b.id}')">Stornieren</button></td>
+    </tr>`).join('');
+}
+
+function renderAllBookings(list) {
+  const tbody = document.getElementById('all-body');
+  if (!list.length) { tbody.innerHTML = `<tr><td colspan="6" class="empty">Keine Buchungen</td></tr>`; return; }
+  tbody.innerHTML = list.map(b => `
+    <tr>
+      <td>${fmtDT(b.start_time)}</td>
+      <td>${b.customer_name}</td>
+      <td>${b.customer_email}</td>
+      <td><span class="badge ${b.status}">${b.status==='confirmed'?'Bestätigt':'Storniert'}</span></td>
+      <td>${sourceBadge(b.source)}</td>
+      <td>${fmtD(b.created_at)}</td>
+    </tr>`).join('');
+}
+
+function filterBookings(status, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  const filtered = status === 'all' ? allBookings : allBookings.filter(b => b.status === status);
+  renderAllBookings(filtered);
+}
+
+async function cancelBooking(id) {
+  if (!confirm('Diesen Termin wirklich stornieren?')) return;
+  const r = await fetch(`${API}/api/admin/booking/${id}`, {
+    method: 'DELETE', headers: { 'Authorization': `Bearer ${adminToken}` }
+  });
+  if (r.ok) { toast('Termin storniert', 'success'); loadDashboard(); }
+  else toast('Fehler', 'error');
+}
+
+function renderLinks() {
+  const base = window.location.origin;
+  const links = [
+    { icon: '🌐', name: 'Website', url: base, source: 'website', desc: 'Für iframe auf Website' },
+    { icon: '📸', name: 'Instagram', url: `${base}?source=instagram`, source: 'instagram', desc: 'Link in Bio' },
+    { icon: '💬', name: 'WhatsApp', url: `${base}?source=whatsapp`, source: 'whatsapp', desc: 'WhatsApp Business' },
+    { icon: '🔍', name: 'Google', url: `${base}?source=google`, source: 'google', desc: 'Google Business' },
+  ];
+  document.getElementById('links-grid').innerHTML = links.map(l => `
+    <div class="link-card" onclick="copyLink('${l.url}', this)">
+      <div class="icon">${l.icon}</div>
+      <div class="name">${l.name}</div>
+      <div class="url">${l.url}</div>
+      <div class="copy-hint" id="hint-${l.source}">✓ Kopiert!</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px">${l.desc}</div>
+    </div>`).join('');
+}
+
+function copyLink(url, card) {
+  navigator.clipboard.writeText(url).then(() => {
+    const hint = card.querySelector('.copy-hint');
+    hint.style.display = 'block';
+    setTimeout(() => hint.style.display = 'none', 2000);
+    toast('Link kopiert!', 'success');
+  });
+}
+
+// Auto-login if token exists
+if (adminToken) {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  loadDashboard();
+}
+</script>
+</body>
+</html>

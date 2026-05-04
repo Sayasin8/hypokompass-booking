@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Termin buchen – HypoKompass</title>
+  <link rel="stylesheet" href="style.css">
+  <meta name="theme-color" content="#1a3a6b">
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-inner">
+        <img src="logo.png" alt="HypoKompass" class="logo" onerror="this.style.display='none'; document.querySelector('.logo-text').style.display='block'">
+        <span class="logo-text" style="display:none">HypoKompass</span>
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <div class="hero">
+      <h1>Kostenlose Beratung buchen</h1>
+      <p>Baufinanzierung einfach erklärt – buchen Sie jetzt Ihren persönlichen Beratungstermin</p>
+    </div>
+
+    <!-- Stepper -->
+    <div class="stepper" id="stepper">
+      <div class="step active" data-step="1"><span class="step-num">1</span><span class="step-label">Datum</span></div>
+      <div class="step-line"></div>
+      <div class="step" data-step="2"><span class="step-num">2</span><span class="step-label">Uhrzeit</span></div>
+      <div class="step-line"></div>
+      <div class="step" data-step="3"><span class="step-num">3</span><span class="step-label">Daten</span></div>
+      <div class="step-line"></div>
+      <div class="step" data-step="4"><span class="step-num">4</span><span class="step-label">Bestätigt</span></div>
+    </div>
+
+    <!-- Step 1: Kalender -->
+    <div class="card" id="step-1">
+      <h2>Datum wählen</h2>
+      <div class="calendar-nav">
+        <button class="nav-btn" id="prev-month">‹</button>
+        <span id="month-label"></span>
+        <button class="nav-btn" id="next-month">›</button>
+      </div>
+      <div class="calendar-grid" id="calendar"></div>
+      <div class="calendar-legend">
+        <span class="legend-item"><span class="dot green"></span> Termine verfügbar</span>
+        <span class="legend-item"><span class="dot gray"></span> Ausgebucht</span>
+      </div>
+    </div>
+
+    <!-- Step 2: Zeitslots -->
+    <div class="card hidden" id="step-2">
+      <button class="back-btn" onclick="goToStep(1)">← Zurück</button>
+      <h2>Uhrzeit wählen</h2>
+      <p class="selected-date-label" id="selected-date-label"></p>
+      <div class="slots-grid" id="slots"></div>
+      <div class="loader hidden" id="slots-loader">Lade Termine…</div>
+    </div>
+
+    <!-- Step 3: Kundendaten -->
+    <div class="card hidden" id="step-3">
+      <button class="back-btn" onclick="goToStep(2)">← Zurück</button>
+      <h2>Ihre Daten</h2>
+      <div class="booking-summary" id="booking-summary"></div>
+      <form id="booking-form">
+        <div class="form-group">
+          <label for="name">Vollständiger Name *</label>
+          <input type="text" id="name" placeholder="Max Mustermann" required autocomplete="name">
+        </div>
+        <div class="form-group">
+          <label for="email">E-Mail-Adresse *</label>
+          <input type="email" id="email" placeholder="max@beispiel.de" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label for="phone">Telefonnummer (empfohlen)</label>
+          <input type="tel" id="phone" placeholder="+49 151 12345678" autocomplete="tel">
+        </div>
+        <div class="privacy-note">
+          <label class="checkbox-label">
+            <input type="checkbox" id="privacy" required>
+            <span>Ich stimme der <a href="https://www.hypokompass.de/datenschutz" target="_blank">Datenschutzerklärung</a> zu *</span>
+          </label>
+        </div>
+        <button type="submit" class="btn-primary" id="submit-btn">
+          Termin verbindlich buchen
+        </button>
+      </form>
+    </div>
+
+    <!-- Step 4: Bestätigung -->
+    <div class="card hidden" id="step-4">
+      <div class="success-icon">✓</div>
+      <h2>Termin bestätigt!</h2>
+      <p class="success-text" id="success-text"></p>
+      <div class="confirmation-box" id="confirmation-box"></div>
+      <p class="email-hint">Eine Bestätigungs-E-Mail wurde an Sie versendet.</p>
+      <div class="action-buttons">
+        <button class="btn-secondary" onclick="shareBooking()">Termin teilen</button>
+        <button class="btn-outline" onclick="location.reload()">Neuen Termin buchen</button>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <a href="https://www.hypokompass.de" target="_blank">www.hypokompass.de</a>
+      &nbsp;|&nbsp;
+      <a href="/stornieren">Termin verwalten</a>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
