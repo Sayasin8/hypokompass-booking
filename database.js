@@ -37,4 +37,9 @@ db.exec(`
   );
 `);
 
+// Migration: consultation_type Spalte nachrüsten falls nicht vorhanden
+try {
+  db.exec(`ALTER TABLE bookings ADD COLUMN consultation_type TEXT DEFAULT 'digital'`);
+} catch (_) {}
+
 module.exports = db;
