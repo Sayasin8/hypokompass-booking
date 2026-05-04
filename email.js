@@ -57,10 +57,10 @@ async function sendConfirmation(booking) {
   const typeLabel = isDigital
     ? '💻 Digital per Video-Call über Microsoft Teams'
     : '🤝 Vor Ort in meinem Büro in der Vahrer Straße 228, 28329 Bremen';
-  const typeBadgeColor = isDigital ? '#1a5276' : '#145a32';
-  const typeBadgeBg = isDigital ? '#d6eaf8' : '#d5f5e3';
+  const typeBadgeColor = isDigital ? '#1a3a6b' : '#145a32';
+  const typeBadgeBg = isDigital ? '#d6e4f7' : '#d5f5e3';
 
-  const firstName = booking.customer_name.split(' ')[0];
+  const lastName = booking.customer_name.split(' ').pop();
 
   const html = `
 <!DOCTYPE html>
@@ -68,69 +68,66 @@ async function sendConfirmation(booking) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: Arial, sans-serif; color: #333; margin: 0; padding: 0; background: #f0f4fb; }
-    .container { max-width: 600px; margin: 24px auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(26,58,107,0.12); }
-    .header { background: #032744; padding: 36px 30px 28px; text-align: center; }
-    .header-brand { color: #e8b84b; font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
-    .header h1 { color: #fff; margin: 0; font-size: 22px; font-weight: 700; }
-    .header-sub { color: rgba(255,255,255,0.7); font-size: 14px; margin-top: 6px; }
-    .body { padding: 32px 30px; }
-    .greeting { font-size: 17px; font-weight: 600; color: #032744; margin-bottom: 16px; }
-    .intro { font-size: 15px; line-height: 1.7; color: #444; margin-bottom: 24px; }
-    .type-badge { display: inline-block; background: ${typeBadgeBg}; color: ${typeBadgeColor}; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; margin-bottom: 20px; }
-    .highlight { background: #f0f4ff; border-left: 4px solid #032744; padding: 18px 20px; margin: 20px 0; border-radius: 8px; }
-    .highlight .label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
-    .highlight .value { font-size: 20px; font-weight: 700; color: #032744; line-height: 1.4; }
-    .info-text { font-size: 14px; line-height: 1.7; color: #555; margin: 20px 0; }
-    .btn { display: inline-block; background: #032744; color: #fff; padding: 13px 28px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600; margin-top: 8px; }
-    .divider { border: none; border-top: 1px solid #eee; margin: 28px 0; }
-    .signature { font-size: 14px; line-height: 1.8; color: #444; }
-    .signature strong { color: #032744; }
-    .signature .title { color: #e8b84b; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
-    .footer { background: #f8f9fb; padding: 16px 30px; font-size: 12px; color: #999; text-align: center; border-top: 1px solid #eee; }
-    .footer a { color: #032744; text-decoration: none; }
-  </style>
 </head>
-<body>
-  <div class="container">
-    <div class="header">
-      <div class="header-brand">HypoKompass</div>
-      <h1>Ihr Beratungstermin ist bestätigt</h1>
-      <div class="header-sub">Baufinanzierung auf Augenhöhe</div>
-    </div>
-    <div class="body">
-      <p class="greeting">Hallo ${firstName},</p>
-      <p class="intro">vielen Dank für Ihr Vertrauen. Ich freue mich auf unser Gespräch und habe Ihren Termin fest für Sie vorgemerkt.</p>
+<body style="font-family: Arial, sans-serif; color: #333; margin: 0; padding: 0; background: #f0f4fb;">
+  <div style="max-width: 600px; margin: 24px auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(3,39,68,0.12);">
 
-      <div class="type-badge">${typeLabel}</div>
+    <!-- HEADER -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="background: #032744;">
+      <tr>
+        <td style="padding: 28px 30px 24px; vertical-align: middle;">
+          <img src="${baseUrl}/logo.png" alt="HypoKompass" style="height: 64px; width: auto; display: block;">
+        </td>
+        <td style="padding: 28px 30px 24px; vertical-align: middle; text-align: right;">
+          <div style="color: #fff; font-size: 24px; font-weight: 700; line-height: 1.2;">Ihr Beratungstermin<br>ist bestätigt!</div>
+        </td>
+      </tr>
+    </table>
 
-      <div class="highlight">
-        <div class="label">Ihr Termin</div>
-        <div class="value">${date}</div>
-        <div class="value">um ${time} Uhr</div>
+    <!-- BODY -->
+    <div style="padding: 32px 30px;">
+      <p style="font-size: 17px; font-weight: 600; color: #032744; margin: 0 0 16px;">Guten Tag, Herr/Frau ${lastName},</p>
+      <p style="font-size: 15px; line-height: 1.7; color: #444; margin: 0 0 24px;">vielen Dank für Ihr Vertrauen. Ich freue mich auf unser Gespräch und habe Ihren Termin fest für Sie vorgemerkt.</p>
+
+      <!-- Terminart-Badge -->
+      <div style="display: inline-block; background: ${typeBadgeBg}; color: ${typeBadgeColor}; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; margin-bottom: 20px;">${typeLabel}</div>
+
+      <!-- Terminbox -->
+      <div style="background: #f0f4ff; border-left: 4px solid #032744; padding: 18px 20px; margin: 0 0 24px; border-radius: 8px;">
+        <div style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Ihr Termin</div>
+        <div style="font-size: 19px; font-weight: 700; color: #032744;">${date} &nbsp;·&nbsp; ${time} Uhr</div>
       </div>
 
-      <p class="info-text">Ich werde mich zeitnah telefonisch bei Ihnen melden, um unseren gemeinsamen Termin vorzubereiten.</p>
+      <p style="font-size: 14px; line-height: 1.7; color: #555; margin: 0 0 20px;">Ich werde mich zeitnah telefonisch bei Ihnen melden, um unseren gemeinsamen Termin vorab zu besprechen und diesen dementsprechend vorzubereiten.</p>
 
-      <p class="info-text">Möchten Sie den Termin verschieben oder stornieren? Kein Problem — nutzen Sie einfach folgenden Link:</p>
-      <a href="${cancelUrl}" class="btn">Termin verwalten</a>
+      <p style="font-size: 14px; line-height: 1.7; color: #555; margin: 0 0 12px;">Möchten Sie den Termin verschieben oder stornieren? Kein Problem — nutzen Sie einfach folgenden Link:</p>
+      <a href="${cancelUrl}" style="display: inline-block; background: #e0352b; color: #fff; padding: 13px 28px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600;">Termin verwalten</a>
 
-      <hr class="divider">
+      <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;">
 
-      <div class="signature">
-        <p>Mit freundlichen Grüßen</p>
-        <p>
-          <strong>Yasin Uca</strong><br>
-          <span class="title">Baufinanzierungsexperte</span><br>
-          <strong>HypoKompass</strong><br>
-          <a href="mailto:info@hypokompass.de" style="color:#032744;">info@hypokompass.de</a><br>
-          <a href="https://www.hypokompass.de" style="color:#032744;">www.hypokompass.de</a>
-        </p>
-      </div>
+      <!-- SIGNATUR -->
+      <table cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+          <td style="vertical-align: top; padding-right: 20px;">
+            <p style="margin: 0 0 6px; font-size: 14px; color: #555;">Mit freundlichen Grüßen</p>
+            <p style="margin: 0; font-size: 14px; line-height: 1.8;">
+              <strong style="color: #032744; font-size: 16px;">Yasin Uca</strong><br>
+              <span style="color: #e0352b; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Baufinanzierungsexperte</span><br>
+              <strong style="color: #032744;">HypoKompass</strong><br>
+              <a href="mailto:info@hypokompass.de" style="color: #032744; text-decoration: none;">info@hypokompass.de</a><br>
+              <a href="https://www.hypokompass.de" style="color: #032744; text-decoration: none;">www.hypokompass.de</a>
+            </p>
+          </td>
+          <td style="vertical-align: top; text-align: right; width: 120px;">
+            <img src="${baseUrl}/profile.jpg" alt="Yasin Uca" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; object-position: top; border: 3px solid #e0352b;">
+          </td>
+        </tr>
+      </table>
     </div>
-    <div class="footer">
-      <a href="https://www.hypokompass.de">www.hypokompass.de</a> &nbsp;|&nbsp;
+
+    <!-- FOOTER -->
+    <div style="background: #f8f9fb; padding: 16px 30px; font-size: 12px; color: #999; text-align: center; border-top: 1px solid #eee;">
+      <a href="https://www.hypokompass.de" style="color: #032744; text-decoration: none;">www.hypokompass.de</a> &nbsp;|&nbsp;
       Diese E-Mail wurde automatisch durch das Buchungssystem von HypoKompass versendet.
     </div>
   </div>
