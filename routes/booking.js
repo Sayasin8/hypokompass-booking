@@ -7,11 +7,30 @@ const { getBusySlots, createCalendarEvent, deleteCalendarEvent } = require('../c
 const { sendConfirmation, sendCancellation, sendRescheduled } = require('../email');
 
 const SLOT_DURATION = parseInt(process.env.SLOT_DURATION_MINUTES || '60');
-const START_HOUR = parseInt(process.env.BOOKING_START_HOUR || '8');
-const END_HOUR = parseInt(process.env.BOOKING_END_HOUR || '18');
+const START_HOUR = parseInt(process.env.BOOKING_START_HOUR || '9');
+const END_HOUR = parseInt(process.env.BOOKING_END_HOUR || '19');
 const BOOKING_DAYS = (process.env.BOOKING_DAYS || '1,2,3,4,5').split(',').map(Number);
 const ADVANCE_DAYS = parseInt(process.env.ADVANCE_BOOKING_DAYS || '60');
 const MAX_RESCHEDULE = parseInt(process.env.MAX_RESCHEDULE_COUNT || '3');
+const TZ = 'Europe/Berlin';
+
+// Gibt UTC-Date zurück, die genau hour:00 Uhr in Europe/Berlin entspricht
+function berlinTime(dateStr, hour) {
+  const ref = new Date(`${dateStr}T12:00:00Z`);
+  const berlinHour = parseInt(
+    new Intl.DateTimeFormat('de', { hour: 'numeric', hour12: false, timeZone: TZ }).format(ref)
+  );
+  const offsetHours = berlinHour - 12;
+  const utcHour = hour - offsetHours;
+  return new Date(`${dateStr}T${String(utcHour).padStart(2, '0')}:00:00Z`);
+}
+
+// Wochentag (0=So … 6=Sa) in Europe/Berlin
+function berlinDayOfWeek(dateStr) {
+  const d = new Date(`${dateStr}T12:00:00Z`);
+  const short = new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short' }).format(d);
+  return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(short);
+}
 
 function logAnalytics(event_type, source, booking_id, metadata) {
   db.prepare(`INSERT INTO analytics (event_type, source, booking_id, metadata) VALUES (?, ?, ?, ?)`)
@@ -38,17 +57,15 @@ router.get('/slots', async (req, res) => {
     ];
 
     const slots = [];
-    const dayOfWeek = dayStart.getDay();
+    const dayOfWeek = berlinDayOfWeek(date);
     if (!BOOKING_DAYS.includes(dayOfWeek)) {
       return res.json({ slots: [] });
     }
 
     const now = new Date();
     for (let h = START_HOUR; h < END_HOUR; h++) {
-      const slotStart = new Date(dayStart);
-      slotStart.setHours(h, 0, 0, 0);
-      const slotEnd = new Date(slotStart);
-      slotEnd.setMinutes(slotEnd.getMinutes() + SLOT_DURATION);
+      const slotStart = berlinTime(date, h);
+      const slotEnd = new Date(slotStart.getTime() + SLOT_DURATION * 60000);
 
       if (slotStart <= now) continue;
 
@@ -95,18 +112,18 @@ router.get('/available-days', async (req, res) => {
     const days = [];
     const cur = new Date(start);
     while (cur <= end) {
-      const dow = cur.getDay();
-      if (BOOKING_DAYS.includes(dow) && cur > today && cur <= maxDate) {
+      const isoDate = cur.toISOString().split('T')[0];
+      const dow = berlinDayOfWeek(isoDate);
+      const curMidnightBerlin = berlinTime(isoDate, 0);
+      if (BOOKING_DAYS.includes(dow) && curMidnightBerlin > today && curMidnightBerlin <= maxDate) {
         let hasSlot = false;
         for (let h = START_HOUR; h < END_HOUR; h++) {
-          const s = new Date(cur);
-          s.setHours(h, 0, 0, 0);
-          const e = new Date(s);
-          e.setMinutes(e.getMinutes() + SLOT_DURATION);
+          const s = berlinTime(isoDate, h);
+          const e = new Date(s.getTime() + SLOT_DURATION * 60000);
           const busy = allBusy.some(b => s < b.end && e > b.start);
           if (!busy) { hasSlot = true; break; }
         }
-        if (hasSlot) days.push(cur.toISOString().split('T')[0]);
+        if (hasSlot) days.push(isoDate);
       }
       cur.setDate(cur.getDate() + 1);
     }
