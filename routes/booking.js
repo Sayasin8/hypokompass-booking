@@ -137,8 +137,8 @@ router.get('/available-days', async (req, res) => {
 router.post('/book', async (req, res) => {
   try {
     const { name, email, phone, start_time, source } = req.body;
-    if (!name || !email || !start_time) {
-      return res.status(400).json({ error: 'Name, E-Mail und Startzeit sind erforderlich' });
+    if (!name || !email || !phone || !start_time) {
+      return res.status(400).json({ error: 'Name, E-Mail, Telefonnummer und Startzeit sind erforderlich' });
     }
 
     const start = new Date(start_time);
@@ -166,9 +166,10 @@ router.post('/book', async (req, res) => {
 
     logAnalytics('booking_created', source, id, { name, email });
 
-    await sendConfirmation({ id, customer_name: name, customer_email: email, customer_phone: phone, start_time: start.toISOString(), cancel_token: cancelToken });
-
     res.json({ success: true, bookingId: id, cancelToken });
+
+    sendConfirmation({ id, customer_name: name, customer_email: email, customer_phone: phone, start_time: start.toISOString(), cancel_token: cancelToken })
+      .catch(err => console.error('E-Mail Fehler (nicht kritisch):', err.message));
   } catch (err) {
     console.error('Buchung Fehler:', err);
     res.status(500).json({ error: 'Buchung fehlgeschlagen. Bitte versuchen Sie es erneut.' });

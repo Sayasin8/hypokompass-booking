@@ -175,6 +175,16 @@ function showStep4() {
 document.getElementById('booking-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = document.getElementById('submit-btn');
+  const phoneInput = document.getElementById('phone');
+  const phoneVal = phoneInput.value.trim();
+  const phoneOk = /^[+\d][\d\s\-\/().]{6,20}$/.test(phoneVal);
+  if (!phoneOk) {
+    phoneInput.classList.add('error');
+    toast('Bitte gültige Telefonnummer eingeben (z. B. +49 151 12345678)', 'error');
+    return;
+  }
+  phoneInput.classList.remove('error');
+
   btn.disabled = true;
   btn.textContent = 'Wird gebucht…';
 
