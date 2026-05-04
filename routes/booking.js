@@ -14,22 +14,21 @@ const ADVANCE_DAYS = parseInt(process.env.ADVANCE_BOOKING_DAYS || '60');
 const MAX_RESCHEDULE = parseInt(process.env.MAX_RESCHEDULE_COUNT || '3');
 const TZ = 'Europe/Berlin';
 
-// Gibt UTC-Date zurück, die genau hour:00 Uhr in Europe/Berlin entspricht
+// UTC-Timestamp für hour:00 Uhr Europe/Berlin – funktioniert mit beliebiger Server-Timezone
 function berlinTime(dateStr, hour) {
   const ref = new Date(`${dateStr}T12:00:00Z`);
-  const berlinHour = parseInt(
-    new Intl.DateTimeFormat('de', { hour: 'numeric', hour12: false, timeZone: TZ }).format(ref)
-  );
-  const offsetHours = berlinHour - 12;
-  const utcHour = hour - offsetHours;
-  return new Date(`${dateStr}T${String(utcHour).padStart(2, '0')}:00:00Z`);
+  const offsetHours = parseInt(
+    new Intl.DateTimeFormat('en-US', { hour: 'numeric', hour12: false, timeZone: TZ }).format(ref)
+  ) - 12;
+  // Arithmetik in ms – kein String-Parsing, kein negativer Stunden-Bug
+  return new Date(new Date(`${dateStr}T00:00:00Z`).getTime() + (hour - offsetHours) * 3600000);
 }
 
 // Wochentag (0=So … 6=Sa) in Europe/Berlin
 function berlinDayOfWeek(dateStr) {
-  const d = new Date(`${dateStr}T12:00:00Z`);
-  const short = new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short' }).format(d);
-  return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(short);
+  return new Date(
+    new Date(`${dateStr}T12:00:00Z`).toLocaleString('en-US', { timeZone: TZ })
+  ).getDay();
 }
 
 function logAnalytics(event_type, source, booking_id, metadata) {
