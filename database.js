@@ -16,6 +16,7 @@ db.exec(`
     reschedule_count INTEGER DEFAULT 0,
     cancel_token TEXT NOT NULL,
     source TEXT DEFAULT 'website',
+    consultation_type TEXT DEFAULT 'digital',
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
   );

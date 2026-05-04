@@ -136,7 +136,7 @@ router.get('/available-days', async (req, res) => {
 // POST /api/book
 router.post('/book', async (req, res) => {
   try {
-    const { name, email, phone, start_time, source } = req.body;
+    const { name, email, phone, start_time, source, consultation_type } = req.body;
     if (!name || !email || !phone || !start_time) {
       return res.status(400).json({ error: 'Name, E-Mail, Telefonnummer und Startzeit sind erforderlich' });
     }
@@ -160,15 +160,15 @@ router.post('/book', async (req, res) => {
     });
 
     db.prepare(`
-      INSERT INTO bookings (id, customer_name, customer_email, customer_phone, start_time, end_time, caldav_uid, cancel_token, source)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(id, name, email, phone || null, start.toISOString(), end.toISOString(), caldavUid || id, cancelToken, source || 'website');
+      INSERT INTO bookings (id, customer_name, customer_email, customer_phone, start_time, end_time, caldav_uid, cancel_token, source, consultation_type)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, name, email, phone || null, start.toISOString(), end.toISOString(), caldavUid || id, cancelToken, source || 'website', consultation_type || 'digital');
 
     logAnalytics('booking_created', source, id, { name, email });
 
     res.json({ success: true, bookingId: id, cancelToken });
 
-    sendConfirmation({ id, customer_name: name, customer_email: email, customer_phone: phone, start_time: start.toISOString(), cancel_token: cancelToken })
+    sendConfirmation({ id, customer_name: name, customer_email: email, customer_phone: phone, start_time: start.toISOString(), cancel_token: cancelToken, consultation_type: consultation_type || 'digital' })
       .catch(err => console.error('E-Mail Fehler (nicht kritisch):', err.message));
   } catch (err) {
     console.error('Buchung Fehler:', err);
