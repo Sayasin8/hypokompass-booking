@@ -342,6 +342,7 @@ function renderLinks() {
     { icon: '📸', name: 'Instagram', url: `${base}?source=instagram`, source: 'instagram', desc: 'Link in Bio' },
     { icon: '💬', name: 'WhatsApp', url: `${base}?source=whatsapp`, source: 'whatsapp', desc: 'WhatsApp Business' },
     { icon: '🔍', name: 'Google', url: `${base}?source=google`, source: 'google', desc: 'Google Business' },
+    { icon: '📅', name: 'Buchungslink', url: base, source: 'buchungslink', desc: 'Direkt-Link kopieren' },
   ];
   document.getElementById('links-grid').innerHTML = links.map(l => `
     <div class="link-card" onclick="copyLink('${l.url}', this)">
@@ -350,7 +351,13 @@ function renderLinks() {
       <div class="url">${l.url}</div>
       <div class="copy-hint" id="hint-${l.source}">✓ Kopiert!</div>
       <div style="font-size:11px;color:var(--muted);margin-top:6px">${l.desc}</div>
-    </div>`).join('');
+    </div>`).join('') + `
+    <div class="link-card" onclick="window.open('/admin','_blank')" style="border-color:#e8b84b;">
+      <div class="icon">⚙️</div>
+      <div class="name" style="color:var(--primary)">Admin-Bereich</div>
+      <div class="url">${base}/admin</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px">Dashboard öffnen</div>
+    </div>`;
 }
 
 function copyLink(url, card) {
