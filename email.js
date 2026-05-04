@@ -75,11 +75,11 @@ async function sendConfirmation(booking) {
     <!-- HEADER -->
     <table width="100%" cellpadding="0" cellspacing="0" style="background: #032744;">
       <tr>
-        <td style="padding: 28px 30px 24px; vertical-align: middle;">
-          <img src="${baseUrl}/logo.png" alt="HypoKompass" style="height: 64px; width: auto; display: block;">
+        <td style="padding: 24px 30px; vertical-align: middle; white-space: nowrap;">
+          <span style="color: #fff; font-size: 20px; font-weight: 700;">Ihr Beratungstermin ist bestätigt!</span>
         </td>
-        <td style="padding: 28px 30px 24px; vertical-align: middle; text-align: right;">
-          <div style="color: #fff; font-size: 24px; font-weight: 700; line-height: 1.2;">Ihr Beratungstermin<br>ist bestätigt!</div>
+        <td style="padding: 24px 30px 24px 0; vertical-align: middle; text-align: right; width: 90px;">
+          <img src="${baseUrl}/logo.png" alt="HypoKompass" style="height: 70px; width: auto; display: block; margin-left: auto;">
         </td>
       </tr>
     </table>
@@ -95,7 +95,7 @@ async function sendConfirmation(booking) {
       <!-- Terminbox -->
       <div style="background: #f0f4ff; border-left: 4px solid #032744; padding: 18px 20px; margin: 0 0 24px; border-radius: 8px;">
         <div style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Ihr Termin</div>
-        <div style="font-size: 19px; font-weight: 700; color: #032744;">${date} &nbsp;·&nbsp; ${time} Uhr</div>
+        <div style="font-size: 19px; font-weight: 700; color: #032744;">${date}, um ${time} Uhr</div>
       </div>
 
       <p style="font-size: 14px; line-height: 1.7; color: #555; margin: 0 0 20px;">Ich werde mich zeitnah telefonisch bei Ihnen melden, um unseren gemeinsamen Termin vorab zu besprechen und diesen dementsprechend vorzubereiten.</p>
@@ -119,7 +119,7 @@ async function sendConfirmation(booking) {
             </p>
           </td>
           <td style="vertical-align: top; text-align: right; width: 120px;">
-            <img src="${baseUrl}/profile.jpg" alt="Yasin Uca" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; object-position: top; border: 3px solid #e0352b;">
+            <img src="${baseUrl}/profile.png" alt="Yasin Uca" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; object-position: top; border: 3px solid #e0352b;">
           </td>
         </tr>
       </table>
