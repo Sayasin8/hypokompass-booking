@@ -117,10 +117,17 @@ function extractDate(icalData, field) {
     const m  = val.slice(11, 13);
     const s  = val.slice(13, 15) || '00';
     const isUtc = val.endsWith('Z');
+    if (isUtc) return new Date(`${y}-${mo}-${d}T${h}:${m}:${s}Z`);
 
-    return isUtc
-      ? new Date(`${y}-${mo}-${d}T${h}:${m}:${s}Z`)
-      : new Date(`${y}-${mo}-${d}T${h}:${m}:${s}`);
+    // Ohne Z → Apple Calendar speichert in lokaler Zeit (Europe/Berlin)
+    // Auf UTC-Server (Railway) müssen wir den Berlin-Offset abziehen
+    const dateStr = `${y}-${mo}-${d}`;
+    const ref = new Date(`${dateStr}T12:00:00Z`);
+    const offsetHours = parseInt(
+      new Intl.DateTimeFormat('en-US', { hour: 'numeric', hour12: false, timeZone: 'Europe/Berlin' }).format(ref)
+    ) - 12;
+    const base = new Date(`${dateStr}T00:00:00Z`);
+    return new Date(base.getTime() + (parseInt(h) - offsetHours) * 3600000 + parseInt(m) * 60000 + parseInt(s) * 1000);
   }
   return null;
 }
