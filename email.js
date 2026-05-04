@@ -1,5 +1,18 @@
 require('dotenv').config();
 const https = require('https');
+const fs = require('fs');
+const path = require('path');
+
+function toBase64(filePath) {
+  try {
+    const data = fs.readFileSync(filePath);
+    const ext = path.extname(filePath).slice(1).replace('jpg', 'jpeg');
+    return `data:image/${ext};base64,${data.toString('base64')}`;
+  } catch { return ''; }
+}
+
+const LOGO_B64 = toBase64(path.join(__dirname, 'public', 'logo.png'));
+const PROFILE_B64 = toBase64(path.join(__dirname, 'public', 'profile.png'));
 
 function brevoSend({ to, subject, html }) {
   return new Promise((resolve, reject) => {
@@ -79,7 +92,7 @@ async function sendConfirmation(booking) {
           <span style="color: #fff; font-size: 20px; font-weight: 700;">Ihr Beratungstermin ist bestätigt!</span>
         </td>
         <td style="padding: 24px 30px 24px 0; vertical-align: middle; text-align: right; width: 90px;">
-          <img src="${baseUrl}/logo.png" alt="HypoKompass" style="height: 70px; width: auto; display: block; margin-left: auto;">
+          <img src="${LOGO_B64}" alt="HypoKompass" style="height: 70px; width: auto; display: block; margin-left: auto;">
         </td>
       </tr>
     </table>
@@ -119,7 +132,7 @@ async function sendConfirmation(booking) {
             </p>
           </td>
           <td style="vertical-align: top; text-align: right; width: 120px;">
-            <img src="${baseUrl}/profile.png" alt="Yasin Uca" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; object-position: top; border: 3px solid #e0352b;">
+            <img src="${PROFILE_B64}" alt="Yasin Uca" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; object-position: top; border: 3px solid #e0352b;">
           </td>
         </tr>
       </table>
