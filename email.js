@@ -54,10 +54,11 @@ function brevoSend({ to, subject, html }) {
 
 function formatDateTime(isoString) {
   const d = new Date(isoString);
+  const tz = 'Europe/Berlin';
   const date = d.toLocaleDateString('de-DE', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: tz,
   });
-  const time = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  const time = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: tz });
   return { date, time };
 }
 
